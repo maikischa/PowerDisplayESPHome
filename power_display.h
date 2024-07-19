@@ -2,20 +2,20 @@
 #include "esphome.h"
 #include "Preferences.h"
 
-// Define the price levels (SEK/kWh)
-#define BELOW_VERY_CHEAP_TEXT "Jättebilligt"
-#define VERY_CHEAP 0.5
-#define VERY_CHEAP_TEXT "Mycket billigt"
-#define CHEAP 1.0
-#define CHEAP_TEXT "Billigt"
-#define NORMAL 1.5
-#define NORMAL_TEXT "Normalt"
-#define EXPENSIVE 3.0
-#define EXPENSIVE_TEXT "Dyrt"
-#define VERY_EXPENSIVE 4.0
-#define VERY_EXPENSIVE_TEXT "Mycket dyrt"
-#define EXTREMELY_EXPENSIVE 5.0
-#define EXTREMELY_EXPENSIVE_TEXT "Extremt dyrt"
+// Define the price levels (€/kWh)
+#define BELOW_VERY_CHEAP_TEXT "super cheap"
+#define VERY_CHEAP 0.01
+#define VERY_CHEAP_TEXT "very cheap"
+#define CHEAP 0.05
+#define CHEAP_TEXT "cheap"
+#define NORMAL 0.10
+#define NORMAL_TEXT "normal"
+#define EXPENSIVE 0.12
+#define EXPENSIVE_TEXT "expensive"
+#define VERY_EXPENSIVE 0.15
+#define VERY_EXPENSIVE_TEXT "very expensive"
+#define EXTREMELY_EXPENSIVE 0.20
+#define EXTREMELY_EXPENSIVE_TEXT "exterme expensive"
 
 // Global functions to save and retrieve values from NVM, to survive a reboot
 
@@ -170,7 +170,7 @@ public:
 		if (isnan(currentPrice) || currentPrice == 0)
 			currentPrice = LoadValueFromNvm("CurrentPrice");
 		
-		buff->printf(120, 257, &id(price_text), COLOR_CSS_WHITESMOKE, TextAlign::BASELINE_CENTER, "%.2f kr/kWh", currentPrice);
+		buff->printf(120, 257, &id(price_text), COLOR_CSS_WHITESMOKE, TextAlign::BASELINE_CENTER, "%.4f Euro/kWh", currentPrice);
 		
 		String price;
 		if (inRange(currentPrice, EXTREMELY_EXPENSIVE, 100)) {price = EXTREMELY_EXPENSIVE_TEXT;}
@@ -193,8 +193,8 @@ public:
 		if (isnan(dailyEnergy) || dailyEnergy == 0) {			
 			dailyEnergy = LoadValueFromNvm("DailyEnergy");		
 		}
-		buff->printf(x, y, &id(energy_text), color, TextAlign::BASELINE_CENTER, "Idag: %.1f kWh", dailyEnergy);
-		buff->printf(x, y+23, &id(energy_text), color, TextAlign::BASELINE_CENTER, "Kostnad: %.2f kr", CalculateAccumulatedCost(currentPrice, dailyEnergy));				
+		buff->printf(x, y, &id(energy_text), color, TextAlign::BASELINE_CENTER, "Today: %.1f kWh", dailyEnergy);
+		buff->printf(x, y+23, &id(energy_text), color, TextAlign::BASELINE_CENTER, "Cost: %.2f Euro", CalculateAccumulatedCost(currentPrice, dailyEnergy));				
 	}
 
 	// Draw the graph
@@ -315,11 +315,3 @@ private:
 
 
 }; //class
-
-
-
-
-
-
-
-
