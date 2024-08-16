@@ -1,8 +1,10 @@
 substitutions:
   temperature_offset: "6.0"
+  name: "esp32-display-kitchen"
   
 esphome:
-  name: "power-display-esphome"
+  name: "${name}"
+  friendly_name: "${name}"
 # Enable the preferences library
   libraries:
     - Preferences

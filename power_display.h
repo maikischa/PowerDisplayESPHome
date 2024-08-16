@@ -1,4 +1,3 @@
-
 #include "esphome.h"
 #include "Preferences.h"
 
