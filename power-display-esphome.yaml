@@ -1,11 +1,16 @@
+substitutions:
+  temperature_offset: "6.0"
+  name: "esp32-display-kitchen"
+  
 esphome:
-  name: "power-display-esphome"
+  name: "${name}"
+  friendly_name: "${name}"
 # Enable the preferences library
   libraries:
     - Preferences
 
   includes:
-    - power_display.h  
+    - PowerDisplayESPHome/power_display.h  
 
 # Save values before shutting down
   on_shutdown:
@@ -19,19 +24,19 @@ esp32:
   framework:
     type: arduino
 
-
 # Enable logging
 logger:
   logs:
     component: ERROR
-	
+
 # Enable Home Assistant API
 api:
   encryption:
     key: !secret encryption_key
 
 ota:
-  password: !secret ota_password
+  - platform: esphome
+    password: !secret ota_password
 
 wifi:
   ssid: !secret wifi_ssid
@@ -141,26 +146,55 @@ color:
 
 # "Icons made by Freepik from www.flaticon.com"
 image:
-  - file: "solar_energy32.png"
+  - file: "PowerDisplayESPHome/icons/solar_energy32.png"
     id: solar_power
     type: RGB24
     #resize: 32x32
-  - file: "electrical_tower32.png"
+  - file: "PowerDisplayESPHome/icons/electrical_tower32.png"
     id: grid_power
     type: RGB24
     #resize: 32x32
 
+bme680_bsec:
+  address: 0x77
+  temperature_offset: ${temperature_offset}
+
 # Define sensors in HomeAssistant that we use for display
 sensor:
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: bme680_bsec # Reports the BME680 values
+    temperature:
+      id: temperature
+      name: "Temperature"
+    pressure:
+      id: pressure
+      name: "Pressure"
+    humidity:
+      id: humidity
+      name: "Humidity"
+    iaq:
+      name: "IAQ"
+      id: iaq
+    co2_equivalent:
+      id: co2
+      name: "CO2 Equivalent"
+    breath_voc_equivalent:
+      id: voc
+      name: "Breath VOC Equivalent"
+
   # Current import (unit is W - if you meter is using kW then it needs conversion)
   - platform: homeassistant
     id: import_el
-    entity_id: sensor.momentary_active_import
-
+    entity_id: sensor.smart_meter_current_power
   # Current export (if having solar production or similar, otherwise comment this out)    
   - platform: homeassistant
     id: export_el
-    entity_id: sensor.momentary_active_export
+    entity_id: sensor.smart_meter_current_power_injection
 
   # Electricity prices from NordPool. Expecting Home Assistant NordPool Integration. https://github.com/custom-components/nordpool
   - platform: homeassistant
@@ -171,16 +205,17 @@ sensor:
   # // From NordPool, but you can also use Tibber etc.
   - platform: homeassistant
     id: price_now
-    entity_id: sensor.electricity_price_langhallagatan_51b
+    entity_id: sensor.nordpool
+    attribute: current_price
 
   # Utility meter template in HomeAssistant. See example below (goes into configuration.yaml in HA.)  
   - platform: homeassistant
     id: consumption_today
-    entity_id: sensor.forbrukning_huset_per_dag
+    entity_id: sensor.daily_energy_consumption
 
   # Example:
-  # utility_meter:
-  # produktion_huset_per_dag:
+  #utility_meter:
+  #produktion_huset_per_dag:
   #   source: sensor.cumulative_active_export
   #   cycle: daily
   
@@ -195,14 +230,57 @@ text_sensor:
     entity_id: sensor.nordpool
     attribute: tomorrow
 
+  - platform: bme680_bsec # Reports the BME680 IAQ as Text
+    iaq_accuracy:
+      id: iaq_accuracy
+      name: "IAQ Accuracy"
+
+  - platform: template
+    id: iaq_text
+    name: "IAQ Classification"
+    icon: "mdi:checkbox-marked-circle-outline"
+    lambda: |-
+      if ( int(id(iaq).state) <= 50) {
+        return {"Excellent"};
+      }
+      else if (int(id(iaq).state) >= 51 && int(id(iaq).state) <= 100) {
+        return {"Good"};
+      }
+      else if (int(id(iaq).state) >= 101 && int(id(iaq).state) <= 150) {
+        return {"Lightly polluted"};
+      }
+      else if (int(id(iaq).state) >= 151 && int(id(iaq).state) <= 200) {
+        return {"Moderately polluted"};
+      }
+      else if (int(id(iaq).state) >= 201 && int(id(iaq).state) <= 250) {
+        return {"Heavily polluted"};
+      }
+      else if (int(id(iaq).state) >= 251 && int(id(iaq).state) <= 350) {
+        return {"Severely polluted"};
+      }
+      else if (int(id(iaq).state) >= 351) {
+        return {"Extremely polluted"};
+      }
+      else {
+        return {"error"};
+      }
+
+i2c:
+  sda: GPIO27
+  scl: GPIO22
+  scan: true
+  id: bus_a
+
 spi:
-  clk_pin: 26 #SCL
-  mosi_pin: 27 #SDA
+  - id: lcd
+    clk_pin: GPIO14
+    mosi_pin: GPIO13
+    miso_pin: GPIO12
 
 # Define a PWM output on the ESP32
 output:
   - platform: ledc
-    pin: 25
+    pin: GPIO21
     id: gpio_backlight_pwm
 
 # Define a monochromatic, dimmable light for the backlight
@@ -216,13 +294,14 @@ light:
 # Note: library has been renamed from ili9341 to ili9xxx in ESPHome 2023.3.0. Use old name if using older version
 display:
   - platform: ili9xxx
-    model: TFT 2.4
-    cs_pin: 13
-    dc_pin: 14
-    reset_pin: 33
+    model: ST7789V
+    spi_id: lcd
+    color_order: bgr
+    cs_pin: 15
+    dc_pin: 2
     rotation: 180
     update_interval: 10s
-
+    invert_colors: false
 
     lambda: |-
 
@@ -257,4 +336,3 @@ interval:
           SaveValuesToNVM();
     
 captive_portal:
-    
