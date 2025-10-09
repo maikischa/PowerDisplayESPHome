@@ -1,7 +1,7 @@
 substitutions:
   temperature_offset: "6.0"
   name: "esp32-display-kitchen"
-  
+
 esphome:
   name: "${name}"
   friendly_name: "${name}"
@@ -10,7 +10,7 @@ esphome:
     - Preferences
 
   includes:
-    - PowerDisplayESPHome/power_display.h  
+    - PowerDisplayESPHome/power_display.h
 
 # Save values before shutting down
   on_shutdown:
@@ -36,7 +36,7 @@ api:
 
 ota:
   - platform: esphome
-    password: !secret ota_password
+  password: !secret ota_password
 
 wifi:
   ssid: !secret wifi_ssid
@@ -52,7 +52,7 @@ time:
   - platform: homeassistant
     id: homeassistant_time
 
-font: 
+font:
   # gfonts://family[@weight]
   - file: "gfonts://Mukta@700"
     id: large_text
@@ -63,7 +63,7 @@ font:
        'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
        'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-       'u', 'v', 'w', 'x', 'y', 'z','å', 'ä', 'ö', '/']    
+       'u', 'v', 'w', 'x', 'y', 'z','å', 'ä', 'ö', '/']
 
   # gfonts://family[@weight]
   - file: "gfonts://Roboto@400"
@@ -148,11 +148,11 @@ color:
 image:
   - file: "PowerDisplayESPHome/icons/solar_energy32.png"
     id: solar_power
-    type: RGB24
+    type: RGB
     #resize: 32x32
   - file: "PowerDisplayESPHome/icons/electrical_tower32.png"
     id: grid_power
-    type: RGB24
+    type: RGB
     #resize: 32x32
 
 bme680_bsec:
@@ -198,7 +198,7 @@ sensor:
 
   # Electricity prices from NordPool. Expecting Home Assistant NordPool Integration. https://github.com/custom-components/nordpool
   - platform: homeassistant
-    id: nordpool_max  
+    id: nordpool_max
     entity_id: sensor.nordpool
     attribute: max
 
@@ -218,7 +218,6 @@ sensor:
   #produktion_huset_per_dag:
   #   source: sensor.cumulative_active_export
   #   cycle: daily
-  
 
 text_sensor:
   - platform: homeassistant   # Nordpool
@@ -290,8 +289,7 @@ light:
     name: "Power Display Backlight"
     id: back_light
     restore_mode: ALWAYS_ON
-    
-# Note: library has been renamed from ili9341 to ili9xxx in ESPHome 2023.3.0. Use old name if using older version
+
 display:
   - platform: ili9xxx
     model: ST7789V
@@ -302,11 +300,11 @@ display:
     rotation: 180
     update_interval: 10s
     invert_colors: false
-
+    color_palette: 8BIT
     lambda: |-
 
-     static PowerDisplay powerDisplay;  
-  
+     static PowerDisplay powerDisplay;
+
      // Unit is W - if your meter is reporting kW then it needs conversion (multiply value by 1000)
      powerDisplay.SetCurrentPower((id(import_el).state - id(export_el).state));  // Use if using solar production
      // powerDisplay.SetCurrentPower(id(import_el).state);  // Use if not using any solar production
@@ -319,8 +317,8 @@ display:
      powerDisplay.DisplayIcons(&it, 10, 10);
      powerDisplay.WritePowerText(&it, 120, 40);
      powerDisplay.WriteDailyAmount(&it, 120, 75, id(COLOR_CSS_WHITESMOKE));
-     powerDisplay.CreateGraph(&it, 15, 115, 220, 100, my_grey);
-     powerDisplay.SetGraphScale(0, 24, 0);
+     powerDisplay.CreateGraph(&it, 15, 95, 220, 120, my_grey);
+     powerDisplay.SetGraphScale(0, 96, 0);
      powerDisplay.SetGraphGrid(&it, 0, 2, 0, 1, my_grey);
      powerDisplay.WriteTimeLine(&it, id(homeassistant_time).now().hour, id(homeassistant_time).now().minute, id(COLOR_CSS_WHITESMOKE));
      powerDisplay.SetPrices("today");
@@ -334,6 +332,6 @@ interval:
     then:
       - lambda: |-
           SaveValuesToNVM();
-    
+
 captive_portal:
-    
+
