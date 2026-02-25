@@ -6,6 +6,7 @@ esphome:
 # Enable the preferences library
   libraries:
     - Preferences
+    - Wire
 
   includes:
     - power_display.h  
