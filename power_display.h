@@ -53,7 +53,7 @@ String LoadStringFromNvm(String key) {
 }
 
 // Global variables. Needed to retain values after reboot
-double currentPower, currentPrice, todayMaxPrice, dailyEnergy;
+double currentPower, currentPrice, todayMaxPrice, dailyEnergy, accumulatedCostToday;
 String TodaysPrices;
 
 void SaveValuesToNVM () {
@@ -67,6 +67,8 @@ void SaveValuesToNVM () {
 		SaveStringToNvm("TodaysPrices", TodaysPrices);
 	if (dailyEnergy != 0)
 		SaveValueToNvm("DailyEnergy", dailyEnergy);
+	if (accumulatedCostToday != 0)
+		SaveValueToNvm("CostToday", accumulatedCostToday);
 }
 
 // PowerDisplay class:
@@ -155,6 +157,13 @@ public:
 		}
 	}
 
+	// Daily cost (€) computed in Home Assistant (utility_meter on the smart meter cost sensor)
+	void SetAccumulatedCostToday(double cost) {
+		if (!isnan(cost)) {
+			accumulatedCostToday = cost;
+		}
+	}
+
 	// Display current power usage
 	void WritePowerText(display::Display *buff, int x, int y) {
 		if (isnan(currentPower) || currentPower == 0)
@@ -194,8 +203,11 @@ public:
 		if (isnan(dailyEnergy) || dailyEnergy == 0) {
 			dailyEnergy = LoadValueFromNvm("DailyEnergy");
 		}
+		if (isnan(accumulatedCostToday) || accumulatedCostToday == 0) {
+			accumulatedCostToday = LoadValueFromNvm("CostToday");
+		}
 		buff->printf(x, y, &id(energy_text), color, TextAlign::BASELINE_CENTER, "Today: %.1f kWh", dailyEnergy);
-		//buff->printf(x, y+23, &id(energy_text), color, TextAlign::BASELINE_CENTER, "Cost: %.2f Euro", CalculateAccumulatedCost(currentPrice, dailyEnergy));
+		buff->printf(x, y+23, &id(energy_text), color, TextAlign::BASELINE_CENTER, "Cost: %.2f Euro", accumulatedCostToday);
 	}
 
 

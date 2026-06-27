@@ -209,10 +209,16 @@ sensor:
     entity_id: sensor.nordpool
     attribute: current_price
 
-  # Utility meter template in HomeAssistant. See example below (goes into configuration.yaml in HA.)  
+  # Utility meter template in HomeAssistant. See example below (goes into configuration.yaml in HA.)
   - platform: homeassistant
     id: consumption_today
     entity_id: sensor.daily_energy_consumption
+
+  # Daily energy cost (EUR). A Home Assistant utility_meter (daily cycle) on top of the
+  # smart meter's cumulative cost sensor, so it reflects the real tariff and resets at midnight.
+  - platform: homeassistant
+    id: accumulated_cost_today
+    entity_id: sensor.daily_energy_cost
 
   # Example:
   #utility_meter:
@@ -314,6 +320,7 @@ display:
      powerDisplay.SetTodaysPrices(id(nordpool_today).state.c_str());
      powerDisplay.SetTomorrowsPrices(id(nordpool_tomorrow).state.c_str());
      powerDisplay.WriteDailyEnergy(id(consumption_today).state);
+     powerDisplay.SetAccumulatedCostToday(id(accumulated_cost_today).state);
      powerDisplay.DisplayIcons(&it, 10, 10);
      powerDisplay.WritePowerText(&it, 120, 40);
      powerDisplay.WriteDailyAmount(&it, 120, 75, id(COLOR_CSS_WHITESMOKE));
