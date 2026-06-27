@@ -292,7 +292,7 @@ light:
     restore_mode: ALWAYS_ON
 
 display:
-  - platform: ili9xxx
+  - platform: mipi_spi
     model: ST7789V
     spi_id: lcd
     color_order: bgr
@@ -301,7 +301,6 @@ display:
     rotation: 180
     update_interval: 10s
     invert_colors: false
-    color_palette: 8BIT
     lambda: |-
 
      static PowerDisplay powerDisplay;
