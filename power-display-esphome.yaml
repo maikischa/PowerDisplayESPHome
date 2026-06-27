@@ -324,7 +324,7 @@ display:
      powerDisplay.DisplayIcons(&it, 10, 10);
      powerDisplay.WritePowerText(&it, 120, 40);
      powerDisplay.WriteDailyAmount(&it, 120, 75, id(COLOR_CSS_WHITESMOKE));
-     powerDisplay.CreateGraph(&it, 15, 95, 220, 120, my_grey);
+     powerDisplay.CreateGraph(&it, 15, 115, 220, 100, my_grey);
      powerDisplay.SetGraphScale(0, 96, 0);
      powerDisplay.SetGraphGrid(&it, 0, 2, 0, 1, my_grey);
      powerDisplay.WriteTimeLine(&it, id(homeassistant_time).now().hour, id(homeassistant_time).now().minute, id(COLOR_CSS_WHITESMOKE));
