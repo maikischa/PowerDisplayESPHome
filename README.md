@@ -1,7 +1,7 @@
 # PowerDisplayESPHome
 
 ### UPDATE: Updated to handle the change to 15 min pricing by NordPool. 
-**Note:** Code has been updated to support ESPHome 2025.9.3. It hasn't been tested on older versions.
+**Note:** Code has been updated to support ESPHome 2026.6.2. It hasn't been tested on older versions.
 
 
 This is a small display that shows the current electricity consumption, together with a graph of the today's electricity price, using either NordPool or Tibber. The software pulls the data from a Home Assistant instance, so all sources must be available there.
