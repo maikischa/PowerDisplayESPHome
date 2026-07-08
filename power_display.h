@@ -14,7 +14,7 @@
 #define VERY_EXPENSIVE 0.15
 #define VERY_EXPENSIVE_TEXT "very expensive"
 #define EXTREMELY_EXPENSIVE 0.20
-#define EXTREMELY_EXPENSIVE_TEXT "exterme expensive"
+#define EXTREMELY_EXPENSIVE_TEXT "extremely expensive"
 
 // Global functions to save and retrieve values from NVM, to survive a reboot
 
