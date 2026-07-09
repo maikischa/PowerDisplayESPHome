@@ -1,5 +1,7 @@
-# ESPHome secrets — never commit real credentials
+# ESPHome secrets — never commit real credentials.
+# secrets.yaml.example (the template) IS tracked; secrets.yaml is not.
 secrets.yaml
+!secrets.yaml.example
 
 # ESPHome / PlatformIO build artifacts
 .esphome/
