@@ -16,16 +16,11 @@ esphome run power-display-esphome.yaml       # compile + flash (USB first time, 
 esphome logs power-display-esphome.yaml      # stream device logs
 ```
 
-To deploy, the `.h` header and the PNG icons must sit next to the YAML in the HA ESPHome folder (e.g. `/homeassistant/config/esphome`), because `includes:` and `image:` reference them by path (the main YAML uses a `PowerDisplayESPHome/` subfolder prefix; the IDF YAML uses bare filenames). `!secret` keys (`encryption_key`, `ota_password`, `wifi_ssid`, `wifi_password`, `fallback_password`) come from ESPHome's `secrets.yaml`, which is not in this repo.
+To deploy, the `.h` header and the PNG icons must sit next to the YAML in the HA ESPHome folder (e.g. `/homeassistant/config/esphome`), because `includes:` and `image:` reference them by path (the YAML uses a `PowerDisplayESPHome/` subfolder prefix). `!secret` keys (`encryption_key`, `ota_password`, `wifi_ssid`, `wifi_password`, `fallback_password`) come from ESPHome's `secrets.yaml`, which is not in this repo.
 
-## Two parallel variants — keep them in sync deliberately
+## The firmware
 
-This repo ships two independent copies of the firmware. They share design but have diverged; a change to one is **not** automatically valid for the other.
-
-- **Root** (`power-display-esphome.yaml` + `power_display.h`) — the maintained version. Arduino framework, single display page, ST7789V panel, includes a BME680 air-quality sensor (I²C) and 15-minute NordPool pricing (96 quarter-hour slots).
-- **`esp-idf-version-with-two-displaypages/`** (`*-idf.yaml` + `power_display_idf.h`) — esp-idf framework, two display pages cycled every 5s (page 2 shows tomorrow's prices), 24-hour hourly pricing. No BME680. Has extra class methods the root lacks (`WriteTomorrowText`, `SetGraphScaleTomorrow`, `DrawPriceGraphTomorrow`, `SetAccumulatedCostToday`, etc.).
-
-When asked to "fix the firmware," confirm which variant. Pin numbers, panel model, price-array sizing (96 vs 24), and the framework type all differ between them.
+The device runs a single firmware: `power-display-esphome.yaml` + `power_display.h`. Arduino framework, single display page, ST7789V panel (Cheap Yellow Display / ESP32-2432S028R), a BME680 air-quality sensor (I²C), and 15-minute NordPool pricing (96 quarter-hour slots).
 
 ## Architecture
 
@@ -38,7 +33,7 @@ The whole render pipeline lives in the `display:` lambda in the YAML, which call
 Key cross-cutting details:
 
 - **NVM persistence.** Globals are written to ESP32 NVS (`Preferences` library, partition `"my_partition"`) every 60s and `on_shutdown`, then re-loaded lazily inside the draw/Set methods when a value reads as `0`/`NaN`. This is what lets the display show meaningful values immediately after a reboot before HA reconnects. `SaveValuesToNVM()` is called from the YAML `interval:` and `on_shutdown:` blocks. The `Preferences` (and `Wire`) libraries must be listed under `esphome: libraries:`.
-- **Price string parsing.** `SetTodaysPrices`/`SetTomorrowsPrices` receive the NordPool `today`/`tomorrow` attribute as a raw string like `[0.12, 0.15, ...]`. `SetPrices()` strips brackets and splits on space/comma into `priceArray[]` / `priceArrayTomorrow[]`. Array sizes are tied to the slot count — **96 in the root variant (15-min), 24/25 in the IDF variant (hourly)**. Changing the pricing resolution means changing the loop bounds in `DrawPriceGraph`, the array dimensions, and `SetGraphScale`'s x-axis max together.
+- **Price string parsing.** `SetTodaysPrices`/`SetTomorrowsPrices` receive the NordPool `today`/`tomorrow` attribute as a raw string like `[0.12, 0.15, ...]`. `SetPrices()` strips brackets and splits on space/comma into `priceArray[]` / `priceArrayTomorrow[]`. Array sizes are tied to the slot count — **96 (15-min NordPool)**. Changing the pricing resolution means changing the loop bounds in `DrawPriceGraph`, the array dimensions, and `SetGraphScale`'s x-axis max together.
 - **Price → color/label thresholds.** The `#define`s at the top of the `.h` (`VERY_CHEAP`, `CHEAP`, `NORMAL`, ... in €/kWh) drive both the graph line color (`PriceColour`) and the text label (`WritePriceText`). Edit these to retune price bands.
 - **Graph coordinate system.** `CreateGraph` sets origin/size; `SetGraphScale` derives `xFactor`/`yFactor` from `todayMaxPrice` and the slot count; all draw methods map data→pixels through those factors. Geometry constants (the x/y offsets passed in the lambda) are hand-tuned to the panel resolution and rotation.
 
